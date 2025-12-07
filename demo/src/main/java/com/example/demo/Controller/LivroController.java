@@ -16,48 +16,64 @@ public class LivroController {
 
     private final LivroRepository livroRepository;
 
+
     @GetMapping
-    public List<LivroModel> findAll(){
+    public List<LivroModel> findAll() {
         return livroRepository.findAll();
     }
-    @GetMapping("/id/{id}") //faz uma requesição
-    public ResponseEntity<LivroModel> getLivroById(@PathVariable Integer id){
-        return livroRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<LivroModel> getLivroById(@PathVariable Integer id) {
+        return livroRepository.findById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
-    @PostMapping("/create") //envia a resposta
-    public ResponseEntity <LivroModel> save(@RequestBody LivroModel livroModel) {
-        return ResponseEntity.ok(livroRepository.save(livroModel));
+
+
+    @PostMapping
+    public ResponseEntity<LivroModel> save(@RequestBody LivroModel livroModel) {
+        LivroModel saved = livroRepository.save(livroModel);
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
-    @PatchMapping("/update/{id}")
+
+
+    @PatchMapping("/{id}")
     public ResponseEntity<LivroModel> update(@PathVariable Integer id, @RequestBody LivroModel livroModel) {
 
-        if (livroModel.getTitulo() != null) {
-                livroModel.setTitulo(livroModel.getTitulo());
-        }
-        if (livroModel.getAutor() != null) {
-            livroModel.setAutor(livroModel.getAutor());
-        }
-        if (livroModel.getIsbn() != null) {
-            livroModel.setIsbn(livroModel.getIsbn());
-        }
-        if (livroModel.getAnoPublicacao() != null) {
-            livroModel.setAnoPublicacao(livroModel.getAnoPublicacao());
-        }
-        if (livroModel.getDisponivel() != null) {
-            livroModel.setDisponivel(livroModel.getDisponivel());
-        }
-        LivroModel updatedLivro = livroRepository.save(livroModel);
-        return ResponseEntity.ok(updatedLivro);
+        return livroRepository.findById(id).map(existing -> {
+
+            if (livroModel.getTitulo() != null) {
+                existing.setTitulo(livroModel.getTitulo());
+            }
+            if (livroModel.getAutor() != null) {
+                existing.setAutor(livroModel.getAutor());
+            }
+            if (livroModel.getIsbn() != null) {
+                existing.setIsbn(livroModel.getIsbn());
+            }
+            if (livroModel.getAnoPublicacao() != null) {
+                existing.setAnoPublicacao(livroModel.getAnoPublicacao());
+            }
+            if (livroModel.getDisponivel() != null) {
+                existing.setDisponivel(livroModel.getDisponivel());
+            }
+
+            LivroModel updated = livroRepository.save(existing);
+            return ResponseEntity.ok(updated);
+
+        }).orElse(ResponseEntity.notFound().build());
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Integer id) {
+
         if (!livroRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
-        livroRepository.deleteById(id);
 
+        livroRepository.deleteById(id);
         return ResponseEntity.noContent().build();
     }
-
 }
